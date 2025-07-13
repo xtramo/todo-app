@@ -11,12 +11,13 @@
     input[type="text"] { flex: 1; padding: 5px; border: 1px solid #ccc; border-right: none; border-radius: 3px 0 0 3px; }
     button { padding: 5px 10px; background: #4CAF50; color: white; border: none; border-radius: 0 3px 3px 0; cursor: pointer; }
     button:hover { background: #45a049; }
-    select { width: 100%; padding: 5px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 3px; }
+    select, .toggle { width: 100%; padding: 5px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 3px; }
     ul { list-style: none; padding: 0; }
     li { display: flex; align-items: center; margin: 5px 0; }
     li.completed span { text-decoration: line-through; color: #888; }
     input[type="checkbox"] { margin-right: 10px; }
-    .translation { font-size: 0.9em; color: #666; margin-left: 20px; }
+    .translation { font-size: 0.8em; color: #666; margin-left: 20px; display: none; }
+    .translation.show { display: inline; }
   </style>
 </head>
 <body>
@@ -27,28 +28,52 @@
       <button onclick="addTask()">Add</button>
     </div>
     <select id="languageSelect" onchange="translateTasks()">
+      <option value="en">English</option>
       <option value="es">Spanish</option>
       <option value="fr">French</option>
       <option value="de">German</option>
     </select>
+    <label class="toggle">
+      <input type="checkbox" id="showTranslation" onchange="toggleTranslation()">
+      Show Translations
+    </label>
     <ul id="taskList"></ul>
   </div>
 
   <script>
     let tasks = [];
 
-    // Simple translation dictionary (static simulation)
+    // Expanded static translation dictionary
     const translations = {
-      es: { "Buy milk": "Comprar leche", "Do homework": "Hacer los deberes" },
-      fr: { "Buy milk": "Acheter du lait", "Do homework": "Faire les devoirs" },
-      de: { "Buy milk": "Milch kaufen", "Do homework": "Hausaufgaben machen" }
+      en: {},
+      es: {
+        "Buy milk": "Comprar leche",
+        "Do homework": "Hacer los deberes",
+        "Call friend": "Llamar al amigo",
+        "Go shopping": "Ir de compras",
+        "Read book": "Leer libro"
+      },
+      fr: {
+        "Buy milk": "Acheter du lait",
+        "Do homework": "Faire les devoirs",
+        "Call friend": "Appeler un ami",
+        "Go shopping": "Faire les courses",
+        "Read book": "Lire un livre"
+      },
+      de: {
+        "Buy milk": "Milch kaufen",
+        "Do homework": "Hausaufgaben machen",
+        "Call friend": "Freund anrufen",
+        "Go shopping": "Einkaufen gehen",
+        "Read book": "Buch lesen"
+      }
     };
 
     function addTask() {
       const input = document.getElementById('taskInput');
       const text = input.value.trim();
       if (text) {
-        tasks.push({ text, completed: false, translation: getTranslation(text, 'es') });
+        tasks.push({ text, completed: false, translation: getTranslation(text, 'en') });
         input.value = '';
         renderTasks();
       }
@@ -60,8 +85,7 @@
     }
 
     function getTranslation(text, lang) {
-      const langTranslations = translations[lang] || {};
-      return langTranslations[text] || `Translated (${lang})`;
+      return translations[lang][text] || `${text} (No translation)`;
     }
 
     function translateTasks() {
@@ -70,6 +94,14 @@
         task.translation = getTranslation(task.text, lang);
       });
       renderTasks();
+    }
+
+    function toggleTranslation() {
+      const show = document.getElementById('showTranslation').checked;
+      const translations = document.getElementsByClassName('translation');
+      for (let t of translations) {
+        t.classList.toggle('show', show);
+      }
     }
 
     function renderTasks() {
@@ -97,6 +129,9 @@
     document.getElementById('taskInput').addEventListener('keypress', function(e) {
       if (e.key === 'Enter') addTask();
     });
+
+    // Initialize with English
+    translateTasks();
   </script>
 </body>
 </html>
