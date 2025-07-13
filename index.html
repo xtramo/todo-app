@@ -3,10 +3,70 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Test Page</title>
+  <title>To-Do App</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f0f0f0; display: flex; justify-content: center; padding-top: 20px; }
+    .container { background: white; padding: 20px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.1); width: 300px; }
+    .input-group { display: flex; margin-bottom: 10px; }
+    input { flex: 1; padding: 5px; border: 1px solid #ccc; border-right: none; border-radius: 3px 0 0 3px; }
+    button { padding: 5px 10px; background: #4CAF50; color: white; border: none; border-radius: 0 3px 3px 0; cursor: pointer; }
+    button:hover { background: #45a049; }
+    ul { list-style: none; padding: 0; }
+    li { display: flex; align-items: center; margin: 5px 0; }
+    li.completed span { text-decoration: line-through; color: #888; }
+    input[type="checkbox"] { margin-right: 10px; }
+  </style>
 </head>
 <body>
-  <h1>Hello, this is a test page!</h1>
-  <p>If you see this, the deployment is working.</p>
+  <div class="container">
+    <h1>To-Do App</h1>
+    <div class="input-group">
+      <input type="text" id="taskInput" placeholder="Add a new task">
+      <button onclick="addTask()">Add</button>
+    </div>
+    <ul id="taskList"></ul>
+  </div>
+
+  <script>
+    let tasks = [];
+
+    function addTask() {
+      const input = document.getElementById('taskInput');
+      const text = input.value.trim();
+      if (text) {
+        tasks.push({ text, completed: false });
+        input.value = '';
+        renderTasks();
+      }
+    }
+
+    function toggleTask(index) {
+      tasks[index].completed = !tasks[index].completed;
+      renderTasks();
+    }
+
+    function renderTasks() {
+      const list = document.getElementById('taskList');
+      list.innerHTML = '';
+      tasks.forEach((task, index) => {
+        const li = document.createElement('li');
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = task.completed;
+        checkbox.onclick = () => toggleTask(index);
+        const span = document.createElement('span');
+        span.textContent = task.text;
+        if (task.completed) span.classList.add('completed');
+        li.appendChild(checkbox);
+        li.appendChild(span);
+        list.appendChild(li);
+      });
+    }
+
+    // Simulate translation (static for now)
+    document.getElementById('taskInput').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') addTask();
+    });
+  </script>
 </body>
 </html>
