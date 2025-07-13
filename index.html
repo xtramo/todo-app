@@ -8,13 +8,15 @@
     body { font-family: Arial, sans-serif; background: #f0f0f0; display: flex; justify-content: center; padding-top: 20px; }
     .container { background: white; padding: 20px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.1); width: 300px; }
     .input-group { display: flex; margin-bottom: 10px; }
-    input { flex: 1; padding: 5px; border: 1px solid #ccc; border-right: none; border-radius: 3px 0 0 3px; }
+    input[type="text"] { flex: 1; padding: 5px; border: 1px solid #ccc; border-right: none; border-radius: 3px 0 0 3px; }
     button { padding: 5px 10px; background: #4CAF50; color: white; border: none; border-radius: 0 3px 3px 0; cursor: pointer; }
     button:hover { background: #45a049; }
+    select { width: 100%; padding: 5px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 3px; }
     ul { list-style: none; padding: 0; }
     li { display: flex; align-items: center; margin: 5px 0; }
     li.completed span { text-decoration: line-through; color: #888; }
     input[type="checkbox"] { margin-right: 10px; }
+    .translation { font-size: 0.9em; color: #666; margin-left: 20px; }
   </style>
 </head>
 <body>
@@ -24,17 +26,29 @@
       <input type="text" id="taskInput" placeholder="Add a new task">
       <button onclick="addTask()">Add</button>
     </div>
+    <select id="languageSelect" onchange="translateTasks()">
+      <option value="es">Spanish</option>
+      <option value="fr">French</option>
+      <option value="de">German</option>
+    </select>
     <ul id="taskList"></ul>
   </div>
 
   <script>
     let tasks = [];
 
+    // Simple translation dictionary (static simulation)
+    const translations = {
+      es: { "Buy milk": "Comprar leche", "Do homework": "Hacer los deberes" },
+      fr: { "Buy milk": "Acheter du lait", "Do homework": "Faire les devoirs" },
+      de: { "Buy milk": "Milch kaufen", "Do homework": "Hausaufgaben machen" }
+    };
+
     function addTask() {
       const input = document.getElementById('taskInput');
       const text = input.value.trim();
       if (text) {
-        tasks.push({ text, completed: false });
+        tasks.push({ text, completed: false, translation: getTranslation(text, 'es') });
         input.value = '';
         renderTasks();
       }
@@ -42,6 +56,19 @@
 
     function toggleTask(index) {
       tasks[index].completed = !tasks[index].completed;
+      renderTasks();
+    }
+
+    function getTranslation(text, lang) {
+      const langTranslations = translations[lang] || {};
+      return langTranslations[text] || `Translated (${lang})`;
+    }
+
+    function translateTasks() {
+      const lang = document.getElementById('languageSelect').value;
+      tasks.forEach(task => {
+        task.translation = getTranslation(task.text, lang);
+      });
       renderTasks();
     }
 
@@ -57,13 +84,16 @@
         const span = document.createElement('span');
         span.textContent = task.text;
         if (task.completed) span.classList.add('completed');
+        const translation = document.createElement('span');
+        translation.textContent = task.translation;
+        translation.classList.add('translation');
         li.appendChild(checkbox);
         li.appendChild(span);
+        li.appendChild(translation);
         list.appendChild(li);
       });
     }
 
-    // Simulate translation (static for now)
     document.getElementById('taskInput').addEventListener('keypress', function(e) {
       if (e.key === 'Enter') addTask();
     });
