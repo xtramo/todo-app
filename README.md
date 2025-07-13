@@ -33,3 +33,5 @@ Product Requirements: prd.md
 User Guide: user_guide.md
 
 Developer Guide: developer_guide.md
+
+Copy of HTML code: code.md
