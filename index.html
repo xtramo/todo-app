@@ -1,6 +1,158 @@
-git clone https://github.com/yourusername/todo-app.git
-cd todo-app
-# Copy index.html to the repository
-git add index.html
-git commit -m "Add To-Do App codebase"
-git push origin main
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>To-Do App</title>
+  <!-- Load Tailwind CSS from CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Load React and dependencies from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/babel-standalone@7/babel.min.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+  <div id="root"></div>
+  <script type="text/babel">
+    // Import React hooks
+    const { useState, useEffect } = React;
+
+    // Main App component
+    function App() {
+      // State for tasks, new task input, selected language, and translations
+      const [tasks, setTasks] = useState([]);
+      const [newTask, setNewTask] = useState('');
+      const [language, setLanguage] = useState('es'); // Default to Spanish
+      const [translations, setTranslations] = useState({});
+
+      // Available languages for translation
+      const languages = [
+        { code: 'es', name: 'Spanish' },
+        { code: 'fr', name: 'French' },
+        { code: 'de', name: 'German' },
+        { code: 'it', name: 'Italian' },
+        { code: 'zh', name: 'Chinese' },
+      ];
+
+      // Function to add a new task
+      const addTask = () => {
+        if (newTask.trim() === '') return; // Prevent empty tasks
+        const newTaskObj = { id: Date.now(), text: newTask, completed: false };
+        setTasks([...tasks, newTaskObj]);
+        setNewTask(''); // Clear input
+        translateTask(newTaskObj.text, newTaskObj.id); // Translate new task
+      };
+
+      // Function to toggle task completion
+      const toggleTask = (id) => {
+        setTasks(tasks.map(task =>
+          task.id === id ? { ...task, completed: !task.completed } : task
+        ));
+      };
+
+      // Function to translate a task using LibreTranslate API
+      const translateTask = async (text, taskId) => {
+        try {
+          const response = await fetch('https://libretranslate.de/translate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              q: text,
+              source: 'en',
+              target: language,
+              format: 'text',
+            }),
+          });
+          const data = await response.json();
+          setTranslations(prev => ({ ...prev, [taskId]: data.translatedText }));
+        } catch (error) {
+          console.error('Translation error:', error);
+          setTranslations(prev => ({ ...prev, [taskId]: 'Translation failed' }));
+        }
+      };
+
+      // Re-translate all tasks when language changes
+      useEffect(() => {
+        tasks.forEach(task => translateTask(task.text, task.id));
+      }, [language]);
+
+      // Handle Enter key for adding tasks
+      const handleKeyPress = (e) => {
+        if (e.key === 'Enter') addTask();
+      };
+
+      return (
+        <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
+          <h1 class="text-2xl font-bold text-center mb-4">To-Do App</h1>
+          
+          {/* Input and Language Selector */}
+          <div class="flex mb-4">
+            <input
+              type="text"
+              value={newTask}
+              onChange={(e) => setNewTask(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Add a new task"
+              class="flex-1 p-2 border rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              aria-label="New task input"
+            />
+            <button
+              onClick={addTask}
+              class="bg-blue-500 text-white p-2 rounded-r-md hover:bg-blue-600"
+              aria-label="Add task"
+            >
+              Add
+            </button>
+          </div>
+          <div class="mb-4">
+            <label for="language" class="block text-sm font-medium text-gray-700">
+              Translate to:
+            </label>
+            <select
+              id="language"
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+              class="mt-1 p-2 border rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+              aria-label="Select language"
+            >
+              {languages.map(lang => (
+                <option key={lang.code} value={lang.code}>{lang.name}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Task List */}
+          <ul class="space-y-2">
+            {tasks.map(task => (
+              <li
+                key={task.id}
+                class="flex items-center p-2 border rounded-md"
+                aria-label={`Task: ${task.text}`}
+              >
+                <input
+                  type="checkbox"
+                  checked={task.completed}
+                  onChange={() => toggleTask(task.id)}
+                  class="mr-2"
+                  aria-label={`Mark ${task.text} as ${task.completed ? 'incomplete' : 'completed'}`}
+                />
+                <div class="flex-1">
+                  <span class={task.completed ? 'line-through text-gray-500' : ''}>
+                    {task.text}
+                  </span>
+                  <p class="text-sm text-gray-600">
+                    Translation: {translations[task.id] || 'Translating...'}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      );
+    }
+
+    // Render the app
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
+</body>
+</html>
