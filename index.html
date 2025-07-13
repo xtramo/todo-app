@@ -14,7 +14,7 @@
     select, .toggle { width: 100%; padding: 5px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 3px; }
     ul { list-style: none; padding: 0; }
     li { display: flex; align-items: center; margin: 5px 0; }
-    li.completed span { text-decoration: line-through; color: #888; }
+    li.completed { text-decoration: line-through; color: #888; } <!-- This crosses out the whole task when done -->
     input[type="checkbox"] { margin-right: 10px; }
     .translation { font-size: 0.8em; color: #666; margin-left: 20px; display: none; }
     .translation.show { display: inline; }
@@ -49,19 +49,21 @@
       if (text) { // Only do this if you typed something
         tasks.push({ text, completed: false, translation: text }); // Add your task to the list
         input.value = ''; // Clear the text box
-        translateTasks(); // Translate the new task
+        translateTasks(); // Translate the new task right away
         renderTasks(); // Show the updated list
       }
     }
 
     function toggleTask(index) {
-      tasks[index].completed = !tasks[index].completed; // Flip the "done" status of the task
+      tasks[index].completed = !tasks[index].completed; // Flip the "done" status of the task to cross it out
+      // We do this because checking a box should show the task is finished by crossing it out!
       renderTasks(); // Update the list to show the change
     }
 
     async function getTranslation(text, targetLang) {
       try {
         const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|${targetLang}`); // Ask the internet to translate the text
+        // We use this API because it’s free and works online without extra setup, perfect for our app!
         const data = await response.json(); // Get the translated text back
         return data.responseData.translatedText || `${text} (Translation failed)`; // Return the translation or the original if it fails
       } catch (error) {
@@ -74,7 +76,8 @@
       console.log('Translating tasks to', document.getElementById('languageSelect').value); // Let us know which language we're using
       const lang = document.getElementById('languageSelect').value; // Get the chosen language
       for (let task of tasks) {
-        task.translation = await getTranslation(task.text, lang); // Translate each task
+        task.translation = await getTranslation(task.text, lang); // Translate each task one by one
+        // We do it this way so the app waits for each translation, making sure it’s ready before showing!
       }
       renderTasks(); // Update the list with new translations
     }
@@ -85,6 +88,7 @@
       const translations = document.getElementsByClassName('translation'); // Find all translation texts
       for (let t of translations) {
         t.classList.toggle('show', show); // Show or hide the translations
+        // This toggle lets you decide if you want to see translations, keeping the app tidy!
       }
     }
 
@@ -93,13 +97,13 @@
       list.innerHTML = ''; // Clear the old list
       tasks.forEach((task, index) => { // Go through each task
         const li = document.createElement('li'); // Make a new line for each task
+        if (task.completed) li.classList.add('completed'); // Add the 'completed' style to cross it out
         const checkbox = document.createElement('input'); // Create a checkbox
         checkbox.type = 'checkbox';
         checkbox.checked = task.completed; // Set if the task is done
         checkbox.onclick = () => toggleTask(index); // Let clicking the checkbox mark it done
         const span = document.createElement('span'); // Create a spot for the task text
         span.textContent = task.text; // Put the task name here
-        if (task.completed) span.classList.add('completed'); // Cross it out if done
         const translation = document.createElement('span'); // Create a spot for the translation
         translation.textContent = task.translation; // Put the translated text here
         translation.classList.add('translation'); // Style it as a translation
@@ -112,6 +116,7 @@
 
     document.getElementById('taskInput').addEventListener('keypress', function(e) { // Listen for when you press a key
       if (e.key === 'Enter') addTask(); // Add the task if you press Enter
+      // We use Enter because it’s a quick way to add tasks without clicking!
     });
 
     // Start with everything in English
